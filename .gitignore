@@ -1,0 +1,14 @@
+# Python 생성 임시 파일
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.ruff_cache/
+
+# 가상환경
+.venv/
+venv/
+
+# 수집/저장 결과 데이터 파일 (선택 사항 - 코드만 제출하는 경우)
+*.csv
+*.parquet

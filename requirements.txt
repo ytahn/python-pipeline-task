@@ -1,0 +1,13 @@
+# 비동기 수집
+httpx
+
+# 스키마 검증
+pydantic>=2.0.0
+
+# 저장 및 데이터 처리 (Parquet 저장용 pyarrow 포함)
+pandas
+pyarrow
+
+# 테스트 및 코드 품질
+pytest
+ruff
