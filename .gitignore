@@ -10,5 +10,5 @@ __pycache__/
 venv/
 
 # 수집/저장 결과 데이터 파일 (선택 사항 - 코드만 제출하는 경우)
-*.csv
-*.parquet
+# *.csv
+# *.parquet
