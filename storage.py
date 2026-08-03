@@ -1,7 +1,6 @@
 import asyncio
 import os
 import time
-
 import pandas as pd
 
 from collector import collect_all_data
@@ -10,16 +9,15 @@ from models import validate_collected_data
 
 def prepare_dataframe(validated_data: dict) -> pd.DataFrame:
     """
-    검증 완료된 Pydantic 모델 데이터를 Pandas DataFrame으로 변환
-    (여기서는 Open-Meteo 시간대별 날씨 데이터를 대표 표 형태로 구조화)
+    검증 완료된 WeatherData Pydantic 객체를 표 형태(Pandas DataFrame)로 변환
     """
     weather_model = validated_data.get("weather")
     if not weather_model:
         raise ValueError("Weather 데이터가 정상적으로 검증되지 않았습니다.")
 
-    # Pydantic 모델에서 hourly 데이터 추출
     hourly = weather_model.hourly
     
+    # 시간대별 데이터와 공통 메타데이터(위도, 경도, 타임존)를 묶어서 DataFrame 생성
     df = pd.DataFrame({
         "time": hourly.time,
         "temperature_2m": hourly.temperature_2m,
@@ -31,13 +29,13 @@ def prepare_dataframe(validated_data: dict) -> pd.DataFrame:
     return df
 
 
-def benchmark_storage(df: pd.DataFrame, csv_path: str = "output.csv", parquet_path: str = "output.parquet"):
+def benchmark_storage(df: pd.DataFrame, csv_path: str = "output.csv", parquet_path: str = "output.parquet") -> dict:
     """
-    CSV와 Parquet 각각의 쓰기/읽기 소요 시간 및 파일 크기를 비교 측정
+    CSV 및 Parquet 파일 형식으로 각각 쓰기/읽기 소요 시간 및 용량 비교 측정
     """
     results = {}
 
-    # 1. CSV 저장 및 읽기 성능 측정
+    # 1. CSV 쓰기 / 읽기 성능 측정
     start_time = time.perf_counter()
     df.to_csv(csv_path, index=False)
     csv_write_time = time.perf_counter() - start_time
@@ -48,7 +46,7 @@ def benchmark_storage(df: pd.DataFrame, csv_path: str = "output.csv", parquet_pa
 
     csv_size_kb = os.path.getsize(csv_path) / 1024
 
-    # 2. Parquet 저장 및 읽기 성능 측정
+    # 2. Parquet 쓰기 / 읽기 성능 측정
     start_time = time.perf_counter()
     df.to_parquet(parquet_path, index=False)
     parquet_write_time = time.perf_counter() - start_time
@@ -59,7 +57,7 @@ def benchmark_storage(df: pd.DataFrame, csv_path: str = "output.csv", parquet_pa
 
     parquet_size_kb = os.path.getsize(parquet_path) / 1024
 
-    # 결과 정리
+    # 결과 데이터 구조화 (ms 단위로 변환)
     results["CSV"] = {
         "write_time_ms": csv_write_time * 1000,
         "read_time_ms": csv_read_time * 1000,
@@ -76,7 +74,7 @@ def benchmark_storage(df: pd.DataFrame, csv_path: str = "output.csv", parquet_pa
 
 def print_performance_summary(metrics: dict):
     """
-    성능 측정 결과를 정리하여 터미널 표 형태로 출력
+    측정된 CSV vs Parquet 성능 비교 결과를 표 형태로 정돈하여 터미널에 출력
     """
     print("\n" + "=" * 55)
     print("📊 [성능 비교 측정 결과: CSV vs Parquet]")
@@ -94,6 +92,9 @@ def print_performance_summary(metrics: dict):
 
 
 def main():
+    """
+    전체 파이프라인(수집 -> 스키마 검증 -> 변환 및 저장 -> 벤치마크) 실행 메인 함수
+    """
     print("1. 비동기 데이터 수집 진행 중...")
     raw_data = asyncio.run(collect_all_data())
 
